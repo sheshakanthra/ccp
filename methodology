@@ -1,0 +1,21 @@
+# Risk-Aware Civic Issue Management System
+
+## Description
+A web-based system that allows citizens to report civic issues with image evidence and risk levels.
+The system dynamically escalates unresolved issues based on time thresholds to ensure faster resolution.
+
+## Core Features
+- Citizen and Admin roles
+- Issue reporting with image upload
+- User-defined risk levels
+- Dynamic risk escalation (24h / 12h / 6h)
+- Priority-based admin dashboard
+
+## Technology Stack
+- Frontend: React
+- Backend: Flask / FastAPI
+- Database: PostgreSQL
+- Storage: Supabase
+
+## Project Status
+Planning and initial setup
