@@ -1,33 +1,55 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
+
 from .database import init_db
 from .routers import issues, auth
 from .services.escalation_engine import run_escalation_check
 
-# Initialize Scheduler
+# Initialize scheduler (single instance)
 scheduler = BackgroundScheduler()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # ---------- STARTUP ----------
+    print("Starting application...")
+
+    # Initialize database
     init_db()
-    
-    # Start Scheduler (Run every 1 minute for demo purposes, 5-15m in prod)
-    scheduler.add_job(run_escalation_check, 'interval', minutes=1)
-    scheduler.start()
-    print("Scheduler started...")
-    
+    print("Database initialized.")
+
+    # Start scheduler only if not already running
+    if not scheduler.running:
+        scheduler.add_job(
+            run_escalation_check,
+            trigger="interval",
+            minutes=1,  # Demo: 1 min | Production: 5–15 mins
+            id="risk_escalation_job",
+            replace_existing=True,
+        )
+        scheduler.start()
+        print("Scheduler started.")
+
     yield
-    
-    # Shutdown
-    scheduler.shutdown()
-    print("Scheduler shutdown...")
 
-app = FastAPI(title="Risk-Aware Civic Issue System", lifespan=lifespan)
+    # ---------- SHUTDOWN ----------
+    print("Shutting down application...")
 
-app.include_router(issues.router)
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
+        print("Scheduler stopped.")
+
+
+app = FastAPI(
+    title="Risk-Aware Civic Issue Management System",
+    lifespan=lifespan,
+)
+
+# Routers
 app.include_router(auth.router)
+app.include_router(issues.router)
+
 
 @app.get("/")
 def root():
